@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
-from gui.gui_methods import center_window, pop_up_message
+from gui_client.gui_methods import center_window, pop_up_message
 from connection import conn
 from threading import Thread
 import time
