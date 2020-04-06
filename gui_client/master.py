@@ -6,9 +6,11 @@ from threading import Thread
 import time
 from winsound import PlaySound, SND_LOOP, SND_ASYNC, SND_PURGE
 from data.voice import Voice
-import threading
+
 
 class App(Tk):
+    start_page_background = r"test.png"
+
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         # Setup Menu
@@ -23,6 +25,8 @@ class App(Tk):
         self.target = ''
 
         self.frames = {}
+
+        self.sp_background = PhotoImage(file=App.start_page_background)
 
         for F in (StartPage, Login, Register, Main, Calling, Chat, Called):
             frame = F(self.container, self)
@@ -221,6 +225,7 @@ class Called(Frame):
         Thread(target=self.wait_for_a_call).start()
 
     def wait_for_a_call(self):
+        # import threading
         # print(threading.currentThread())
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
@@ -258,6 +263,8 @@ class Called(Frame):
 class StartPage(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
+        background_label = Label(self, image=controller.sp_background)
+        background_label.place(x=0, y=0, relwidth=1, relheight=1)
         Label(self, text='Welcome to VOICECHAT, please log in to continue',
               font=('Ariel', 18), foreground='orange').pack(padx=5, pady=5)
         Button(self, text='login', command=lambda: controller.show_frame(Login)).pack()
