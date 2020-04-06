@@ -53,8 +53,7 @@ class Voice:
         send.start()
         recv.join()
         send.join()
-        self.s.close()
-        print('voice1 closed')
+        print('Voice chat closed')
 
     def end(self):
         self.stop = True

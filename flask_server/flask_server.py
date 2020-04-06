@@ -180,15 +180,23 @@ def check_connection():
         src = request.form.get("src")
         name = request.form.get("name")
         result = ""
+
+        # check if not rejected
+        if dst and src:
+            data = Call.query.filter_by(dst=dst, src=src).first()
+            if data:
+                result = True  # not rejected
+
         # check if in chat
-        if name:
+        elif name:
             data = Call.query.filter_by(dst=name, operation='call').first()
             if not data:
                 data = Call.query.filter_by(src=name, operation='call').first()
             if data:
                 result = True
+
         # check if being called; 'calling'
-        elif dst:
+        elif dst and not src:
             row = Call.query.filter_by(dst=dst).first()
             if row:
                 result = row.src

@@ -1,6 +1,7 @@
 import requests
 import time
 import socket
+
 # host = 'DESKTOP-03A6E0A'
 # host_name = 'DESKTOP-EVCG5AF'  # COMPUTER 2
 # host_name = input("enter host name, flask_server prints it in run\r\n"
@@ -18,6 +19,13 @@ def print_info():
 
 
 print_info()
+
+
+# if call not rejected returns True
+def not_rejected(src, dst):
+    data = {'src': src, 'dst': dst}
+    r = requests.get(flask_url + '/check', data=data)
+    return r.json()
 
 
 def user_lists():

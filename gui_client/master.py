@@ -6,7 +6,7 @@ from threading import Thread
 import time
 from winsound import PlaySound, SND_LOOP, SND_ASYNC, SND_PURGE
 from data.voice import Voice
-
+import threading
 
 class App(Tk):
     def __init__(self, *args, **kwargs):
@@ -120,9 +120,7 @@ class Main(Frame):
         if len(target) > 2 and target != self.controller.username:
             user_ip = conn.get_user_ip(target)
             if user_ip:  # checks if the user exists
-                print('target =', target)
                 self.controller.target = target
-
                 self.controller.show_frame(Calling)
                 self.controller.frames[Calling].call()
             else:
@@ -145,7 +143,7 @@ class Calling(Frame):
         Button(self, text='Cancel Call', command=self.stop_calling).pack()
 
     def call(self):
-        print('hi')
+        print(f'calling {self.controller.target}')
         self.label['text'] = f'Calling {self.controller.target}...'
         Thread(target=self.call_now).start()
 
@@ -171,6 +169,9 @@ class Calling(Frame):
             if conn.is_in_chat(self.controller.username):
                 result = 'accepted'
                 break
+            if not conn.not_rejected(self.controller.username, self.controller.target):
+                result = 'rejected'
+                break
         PlaySound(None, SND_PURGE)
         return result
 
@@ -180,7 +181,7 @@ class Calling(Frame):
         is_posted = conn.call(self.controller.username, self.controller.target)
         if is_posted:
             print('call posted')
-            result = self.wait_for_answer(2)
+            result = self.wait_for_answer(1)
             if result == 'accepted':
                 print('call accepted')
                 self.controller.show_frame(Chat)
@@ -192,6 +193,9 @@ class Calling(Frame):
                     print("call canceled, didn't receive answer in time")
                 elif result == 'canceled':
                     self.cancel = False
+                elif result == 'rejected':
+                    pop_up_message("call rejected")
+                    print("call canceled")
 
         else:  # error, call already exists, handling
             conn.stop_calling(self.controller.username)
@@ -199,6 +203,8 @@ class Calling(Frame):
 
 
 class Called(Frame):
+    ring = r'ring2.wav'
+
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -215,7 +221,8 @@ class Called(Frame):
         Thread(target=self.wait_for_a_call).start()
 
     def wait_for_a_call(self):
-        print('waiting for a call, name:', self.controller.username)
+        # print(threading.currentThread())
+        print(f'hi {self.controller.username}, waiting for a call')
         while True:
             if conn.look_for_call(self.controller.username):
                 break
@@ -223,19 +230,26 @@ class Called(Frame):
         self.controller.show_frame(Called)
         user = conn.get_src_name(self.controller.username)
         self.controller.user_called = user
-        print(user, 'called')
+        print(f'{user} called')
         self.text1['text'] = f'you got a call from {user}\ndo you want to answer'
+        PlaySound(Called.ring, SND_LOOP + SND_ASYNC)
 
     def yes(self):
+        PlaySound(None, SND_PURGE)
         successful = conn.accept(self.controller.user_called, self.controller.username)
         if successful == 'True':
             time.sleep(1)
-
             self.controller.show_frame(Chat)
             self.controller.frames[Chat].start_chat()
+        else:
+            pop_up_message('call was canceled')
+            print('call was canceled')
+            self.controller.show_frame(Main)
+            self.start_checking()
 
     def no(self):
         ### is this how i wanna handle that? the caller dont check if we canceled
+        PlaySound(None, SND_PURGE)
         conn.stop_chat(self.controller.username)
         self.controller.show_frame(Main)
         self.start_checking()
@@ -244,23 +258,25 @@ class Called(Frame):
 class StartPage(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
-        self.button_login = Button(self, text='login', command=lambda: controller.show_frame(Login))
-        self.button_register = Button(self, text='register', command=lambda: controller.show_frame(Register))
-
-        self.button_login.pack()
-        self.button_register.pack()
+        Label(self, text='Welcome to VOICECHAT, please log in to continue',
+              font=('Ariel', 18), foreground='orange').pack(padx=5, pady=5)
+        Button(self, text='login', command=lambda: controller.show_frame(Login)).pack()
+        Label(self, text='Not registered yet? Do it now',
+              font=('Ariel', 15), foreground='blue').pack(padx=5, pady=5)
+        Button(self, text='register', command=lambda: controller.show_frame(Register)).pack()
 
 
 class Login(Frame):
     def __init__(self, parent, controller):
-        self.controller = controller
         super().__init__(parent)
+        self.controller = controller
+        # Label(self, text='Login', font=('Ariel', 20), foreground='orange').grid()
         self.entry_name = Entry(self)
         self.entry_pas = Entry(self, show='*')
         name = Label(self, text='Name')
         pas = Label(self, text='Password')
-        enter = Button(self, text='Enter', command=self.handle)
-        self.bind_all('<Return>', self.handle)
+        enter = Button(self, text='Enter', command=self.collect)
+        self.bind_all('<Return>', self.collect)
         self.entry_name.focus_set()
         # grid & pack
         name.grid(row=0, sticky=E)
@@ -269,9 +285,7 @@ class Login(Frame):
         self.entry_pas.grid(row=1, column=1)
         enter.grid()
 
-    def handle(self):
-        name = self.entry_name.get()
-        pas = self.entry_pas.get()
+    def enter(self, name, pas):
         is_connected = conn.login(name, pas)
         if is_connected:
             self.controller.username = name
@@ -284,11 +298,17 @@ class Login(Frame):
             self.entry_pas.delete(0, END)
             pop_up_message("name or password is incorrect")
 
+    def collect(self):
+        name = self.entry_name.get()
+        pas = self.entry_pas.get()
+        self.enter(name, pas)
+
 
 class Register(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
+        # Label(self, text='Register', font=('Ariel', 20), foreground='blue').grid()
         self.entry_name = Entry(self)
         self.entry_password = Entry(self)
         name = Label(self, text='Name')
@@ -317,8 +337,8 @@ class Register(Frame):
         else:
             success = conn.register(name, pas)
             if success:
-                pop_up_message('added to database')
-                self.controller.show_frame(StartPage)
+                # pop_up_message('added to database')
+                self.controller.frames[Login].enter(name, pas)
             else:
                 pop_up_message('username already used')
 

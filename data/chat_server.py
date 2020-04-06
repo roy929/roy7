@@ -40,7 +40,6 @@ class ChatServer:
                         print("%s left the server" % str(self.addresses[current_socket]))
                         current_socket.close()
                         self.CONNECTION_LIST.remove(current_socket)
-                        print(len(self.CONNECTION_LIST)-1)
 
 
 if __name__ == "__main__":
