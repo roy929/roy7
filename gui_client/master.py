@@ -1,10 +1,10 @@
 from tkinter import *
 from tkinter.ttk import *
-from gui_client.gui_methods import center_window, pop_up_message
-from connection import conn
-from threading import Thread
+from threading import Thread, enumerate
 import time
 from winsound import PlaySound, SND_LOOP, SND_ASYNC, SND_PURGE
+from gui_client.gui_methods import center_window, pop_up_message
+from connection import conn
 from data.voice import Voice
 
 
@@ -95,12 +95,13 @@ class Main(Frame):
         Button(self, text='Call', command=self.pre_call).pack()
         Label(self, text='Users', font=('Ariel', 18), foreground='blue').pack()
         self.users.pack()
-        self.users.bind_all('<<ListboxSelect>>', self.to_entry)
-        self.bind_all('<Return>', self.pre_call)
+        self.users.bind('<<ListboxSelect>>', self.to_entry)
+        self.bind('<Return>', self.pre_call)
         self.target_name.focus_set()
 
     # create list of users
     def set_users_list(self):
+        print(enumerate())
         self.users.delete(0, END)
         users = conn.user_lists()
         for user in users:
@@ -215,7 +216,7 @@ class Called(Frame):
 
         self.text1 = Label(self, font=('Ariel', 20), foreground='magenta')
         self.text1.pack()
-        self.bind_all('<Return>', self.yes)
+        self.bind('<Return>', self.yes)
         yes = Button(self, text='yes', command=self.yes)
         yes.focus_set()
         yes.pack()
@@ -225,8 +226,6 @@ class Called(Frame):
         Thread(target=self.wait_for_a_call).start()
 
     def wait_for_a_call(self):
-        # import threading
-        # print(threading.currentThread())
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
             if conn.look_for_call(self.controller.username):
@@ -283,7 +282,7 @@ class Login(Frame):
         name = Label(self, text='Name')
         pas = Label(self, text='Password')
         enter = Button(self, text='Enter', command=self.collect)
-        self.bind_all('<Return>', self.collect)
+        self.bind('<Return>', self.collect)
         self.entry_name.focus_set()
         # grid & pack
         name.grid(row=0, sticky=E)
@@ -321,7 +320,7 @@ class Register(Frame):
         name = Label(self, text='Name')
         pas = Label(self, text='Password')
         enter = Button(self, text='Register', command=self.handle)
-        self.bind_all('<Return>', self.handle)
+        self.bind('<Return>', self.handle)
         self.entry_name.focus_set()
 
         # grid & pack
