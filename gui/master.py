@@ -3,13 +3,13 @@ from tkinter.ttk import *
 from threading import Thread, enumerate
 import time
 from winsound import PlaySound, SND_LOOP, SND_ASYNC, SND_PURGE
-from gui_client.gui_methods import center_window, pop_up_message
-from connection import conn
+from gui.gui_methods import center_window, pop_up_message
+from connection import ask
 from data.voice import Voice
 
 
 class App(Tk):
-    start_page_background = r"test.png"
+    start_page_background = r"..\media\test.png"
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -58,7 +58,7 @@ class Chat(Frame):
         Button(self, text='End Chat', command=self.stop_chat).pack()
 
     def stop_chat(self):
-        conn.stop_chat(self.controller.username)
+        ask.stop_chat(self.controller.username)
 
     def start_chat(self):
         Thread(target=self.run_chat).start()
@@ -72,7 +72,7 @@ class Chat(Frame):
         time.sleep(2)
         while True:
             time.sleep(1)
-            if not conn.is_in_chat(self.controller.username):
+            if not ask.is_in_chat(self.controller.username):
                 self.v1.end()
                 self.controller.show_frame(Main)
                 time.sleep(0.4)
@@ -103,7 +103,7 @@ class Main(Frame):
     def set_users_list(self):
         print(enumerate())
         self.users.delete(0, END)
-        users = conn.user_lists()
+        users = ask.user_lists()
         for user in users:
             if user != self.controller.username:
                 self.users.insert(END, user)
@@ -123,7 +123,7 @@ class Main(Frame):
         target = self.target_name.get()
         self.target_name.delete(0, END)
         if len(target) > 2 and target != self.controller.username:
-            user_ip = conn.get_user_ip(target)
+            user_ip = ask.get_user_ip(target)
             if user_ip:  # checks if the user exists
                 self.controller.target = target
                 self.controller.show_frame(Calling)
@@ -137,7 +137,7 @@ class Main(Frame):
 
 
 class Calling(Frame):
-    ring = 'ring.wav'
+    ring = r"..\media\ring.wav"
 
     def __init__(self, master, controller):
         super().__init__(master)
@@ -154,7 +154,7 @@ class Calling(Frame):
 
     # cancels call
     def stop_calling(self):
-        conn.stop_calling(self.controller.username)
+        ask.stop_calling(self.controller.username)
         self.cancel = True
 
     # checks if target agreed to chat
@@ -171,10 +171,10 @@ class Calling(Frame):
             if time.time() > max_time:
                 result = 'timed_out'
                 break
-            if conn.is_in_chat(self.controller.username):
+            if ask.is_in_chat(self.controller.username):
                 result = 'accepted'
                 break
-            if not conn.not_rejected(self.controller.username, self.controller.target):
+            if not ask.not_rejected(self.controller.username, self.controller.target):
                 result = 'rejected'
                 break
         PlaySound(None, SND_PURGE)
@@ -183,7 +183,7 @@ class Calling(Frame):
     # calls and handle the call
     def call_now(self):
         # self.show_frame(self.callingF)
-        is_posted = conn.call(self.controller.username, self.controller.target)
+        is_posted = ask.call(self.controller.username, self.controller.target)
         if is_posted:
             print('call posted')
             result = self.wait_for_answer(1)
@@ -203,12 +203,12 @@ class Calling(Frame):
                     print("call canceled")
 
         else:  # error, call already exists, handling
-            conn.stop_calling(self.controller.username)
+            ask.stop_calling(self.controller.username)
             self.call_now()
 
 
 class Called(Frame):
-    ring = r'ring2.wav'
+    ring = r"..\media\ring2.wav"
 
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -228,11 +228,11 @@ class Called(Frame):
     def wait_for_a_call(self):
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
-            if conn.look_for_call(self.controller.username):
+            if ask.look_for_call(self.controller.username):
                 break
             time.sleep(1)
         self.controller.show_frame(Called)
-        user = conn.get_src_name(self.controller.username)
+        user = ask.get_src_name(self.controller.username)
         self.controller.user_called = user
         print(f'{user} called')
         self.text1['text'] = f'you got a call from {user}\ndo you want to answer'
@@ -240,7 +240,7 @@ class Called(Frame):
 
     def yes(self):
         PlaySound(None, SND_PURGE)
-        successful = conn.accept(self.controller.user_called, self.controller.username)
+        successful = ask.accept(self.controller.user_called, self.controller.username)
         if successful == 'True':
             time.sleep(1)
             self.controller.show_frame(Chat)
@@ -254,7 +254,7 @@ class Called(Frame):
     def no(self):
         ### is this how i wanna handle that? the caller dont check if we canceled
         PlaySound(None, SND_PURGE)
-        conn.stop_chat(self.controller.username)
+        ask.stop_chat(self.controller.username)
         self.controller.show_frame(Main)
         self.start_checking()
 
@@ -292,7 +292,7 @@ class Login(Frame):
         enter.grid()
 
     def enter(self, name, pas):
-        is_connected = conn.login(name, pas)
+        is_connected = ask.login(name, pas)
         if is_connected:
             self.controller.username = name
             pop_up_message(f"you're in, {name}")
@@ -341,7 +341,7 @@ class Register(Frame):
             pop_up_message('name and password must be at least 3 characters')
         # add to database unless name is already used
         else:
-            success = conn.register(name, pas)
+            success = ask.register(name, pas)
             if success:
                 # pop_up_message('added to database')
                 self.controller.frames[Login].enter(name, pas)

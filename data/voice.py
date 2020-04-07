@@ -1,7 +1,7 @@
 import socket
 import pyaudio
 from threading import Thread
-from connection import conn
+from connection import ask
 
 # record
 CHUNK = 1024  # 512
@@ -10,7 +10,7 @@ CHANNELS = 1
 RATE = 20000
 # socket
 SERVER_PORT = 50002
-SERVER_IP = conn.host_ip
+SERVER_IP = ask.host_ip
 
 
 class Voice:
