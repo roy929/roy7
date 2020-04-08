@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
-from threading import Thread, enumerate
+from threading import Thread, enumerate, active_count
 import time
 from winsound import PlaySound, SND_LOOP, SND_ASYNC, SND_PURGE
 from gui.gui_methods import center_window, pop_up_message
@@ -28,6 +28,8 @@ class App(Tk):
 
         self.sp_background = PhotoImage(file=App.start_page_background)
 
+        self.threading_state()
+
         for F in (StartPage, Login, Register, Main, Calling, Chat, Called):
             frame = F(self.container, self)
             self.frames[F] = frame
@@ -49,6 +51,13 @@ class App(Tk):
         frame = self.frames[context]
         frame.tkraise()
 
+    def threading_state(self, wait=10000):
+        print('threads num:', active_count() - 1)
+        threads = [thread.getName() for thread in enumerate() if thread.getName() != 'MainThread']
+        if threads:
+            print(threads)
+        self.after(wait, self.threading_state)
+
 
 class Chat(Frame):
     def __init__(self, master, controller):
@@ -61,11 +70,8 @@ class Chat(Frame):
         ask.stop_chat(self.controller.username)
 
     def start_chat(self):
-        Thread(target=self.run_chat).start()
-
-    def run_chat(self):
         self.v1 = Voice()
-        Thread(target=self.chat_ended).start()
+        Thread(target=self.chat_ended, name='chat_ended').start()
         self.v1.start()
 
     def chat_ended(self):
@@ -101,7 +107,6 @@ class Main(Frame):
 
     # create list of users
     def set_users_list(self):
-        print(enumerate())
         self.users.delete(0, END)
         users = ask.user_lists()
         for user in users:
@@ -150,7 +155,7 @@ class Calling(Frame):
     def call(self):
         print(f'calling {self.controller.target}')
         self.label['text'] = f'Calling {self.controller.target}...'
-        Thread(target=self.call_now).start()
+        Thread(target=self.call_now, name='call_now').start()
 
     # cancels call
     def stop_calling(self):
@@ -223,20 +228,22 @@ class Called(Frame):
         Button(self, text='no', command=self.no).pack()
 
     def start_checking(self):
-        Thread(target=self.wait_for_a_call).start()
+        Thread(target=self.wait_for_a_call, name='wait_for_a_call').start()
 
     def wait_for_a_call(self):
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
             if ask.look_for_call(self.controller.username):
+                self.controller.show_frame(Called)
+                user = ask.get_src_name(self.controller.username)
+                self.controller.user_called = user
+                print(f'{user} called')
+                self.text1['text'] = f'you got a call from {user}\ndo you want to answer'
+                PlaySound(Called.ring, SND_LOOP + SND_ASYNC)
+                break
+            if ask.is_in_chat(self.controller.username):  # when calling and call was approved
                 break
             time.sleep(1)
-        self.controller.show_frame(Called)
-        user = ask.get_src_name(self.controller.username)
-        self.controller.user_called = user
-        print(f'{user} called')
-        self.text1['text'] = f'you got a call from {user}\ndo you want to answer'
-        PlaySound(Called.ring, SND_LOOP + SND_ASYNC)
 
     def yes(self):
         PlaySound(None, SND_PURGE)

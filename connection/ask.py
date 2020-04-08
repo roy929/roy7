@@ -90,8 +90,7 @@ def get_src_name(dst_name):
 def is_in_chat(name):
     data = {'name': name}
     r = requests.get(flask_url + '/check', data=data)
-    # json = operation
-    return r.json()  # operation
+    return r.json()
 
 
 # when calling

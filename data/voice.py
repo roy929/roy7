@@ -47,14 +47,12 @@ class Voice:
 
     def start(self):
         self.conn(SERVER_IP, SERVER_PORT)
-        recv = Thread(target=self.receive_data)
-        send = Thread(target=self.send_data)
+        recv = Thread(target=self.receive_data, name='receive_data')
+        send = Thread(target=self.send_data, name='send_data')
         recv.start()
         send.start()
-        recv.join()
-        send.join()
-        print('Voice chat closed')
 
     def end(self):
         self.stop = True
         self.s.close()
+        print('Voice chat closed')
