@@ -23,6 +23,7 @@ class App(Tk):
 
         self.username = ''
         self.target = ''
+        self.user_called = ''
 
         self.frames = {}
 
@@ -71,7 +72,7 @@ class Chat(Frame):
 
     def start_chat(self):
         self.v1 = Voice()
-        Thread(target=self.chat_ended, name='chat_ended').start()
+        Thread(target=self.chat_ended, name='chat_ended', daemon=True).start()
         self.v1.start()
 
     def chat_ended(self):
@@ -155,7 +156,7 @@ class Calling(Frame):
     def call(self):
         print(f'calling {self.controller.target}')
         self.label['text'] = f'Calling {self.controller.target}...'
-        Thread(target=self.call_now, name='call_now').start()
+        Thread(target=self.calling, name='calling', daemon=True).start()
 
     # cancels call
     def stop_calling(self):
@@ -163,7 +164,7 @@ class Calling(Frame):
         self.cancel = True
 
     # checks if target agreed to chat
-    def wait_for_answer(self, timeout=1):
+    def answer(self, timeout=1):
         max_time = time.time() + 60 * timeout  # 1 minutes from now
         # check if 'calling' changed to 'call'
         PlaySound(Calling.ring, SND_LOOP + SND_ASYNC)
@@ -186,12 +187,11 @@ class Calling(Frame):
         return result
 
     # calls and handle the call
-    def call_now(self):
-        # self.show_frame(self.callingF)
+    def calling(self):
         is_posted = ask.call(self.controller.username, self.controller.target)
         if is_posted:
             print('call posted')
-            result = self.wait_for_answer(1)
+            result = self.answer(1)
             if result == 'accepted':
                 print('call accepted')
                 self.controller.show_frame(Chat)
@@ -208,8 +208,9 @@ class Calling(Frame):
                     print("call canceled")
 
         else:  # error, call already exists, handling
+            print('error')
             ask.stop_calling(self.controller.username)
-            self.call_now()
+            self.calling()
 
 
 class Called(Frame):
@@ -228,9 +229,9 @@ class Called(Frame):
         Button(self, text='no', command=self.no).pack()
 
     def start_checking(self):
-        Thread(target=self.wait_for_a_call, name='wait_for_a_call').start()
+        Thread(target=self.called, name='called', daemon=True).start()
 
-    def wait_for_a_call(self):
+    def called(self):
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
             if ask.look_for_call(self.controller.username):
@@ -356,28 +357,28 @@ class Register(Frame):
                 pop_up_message('username already used')
 
 
-class PageOne(Frame):
-    def __init__(self, parent, controller):
-        Frame.__init__(self, parent)
-
-        label = Label(self, text="Page One")
-        label.pack(padx=10, pady=10)
-        start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
-        start_page.pack()
-        page_two = Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
-        page_two.pack()
-
-
-class PageTwo(Frame):
-    def __init__(self, parent, controller):
-        Frame.__init__(self, parent)
-
-        label = Label(self, text="Page Two")
-        label.pack(padx=10, pady=10)
-        start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
-        start_page.pack()
-        page_one = Button(self, text="Page One", command=lambda: controller.show_frame(PageOne))
-        page_one.pack()
+# class PageOne(Frame):
+#     def __init__(self, parent, controller):
+#         Frame.__init__(self, parent)
+#
+#         label = Label(self, text="Page One")
+#         label.pack(padx=10, pady=10)
+#         start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
+#         start_page.pack()
+#         page_two = Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
+#         page_two.pack()
+#
+#
+# class PageTwo(Frame):
+#     def __init__(self, parent, controller):
+#         Frame.__init__(self, parent)
+#
+#         label = Label(self, text="Page Two")
+#         label.pack(padx=10, pady=10)
+#         start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
+#         start_page.pack()
+#         page_one = Button(self, text="Page One", command=lambda: controller.show_frame(PageOne))
+#         page_one.pack()
 
 
 class MainMenu:
