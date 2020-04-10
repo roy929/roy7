@@ -94,16 +94,9 @@ def is_in_chat(name):
 
 
 # when calling
-def stop_calling(name):
-    msg = {'name': name, 'operation': 'calling'}
-    r = requests.delete(flask_url + "/stop_call", data=msg)
-    return r.json()  # r.status_code
-
-
-# when in chat
-def stop_chat(name):
-    check_call = {'name': name, 'operation': 'call'}
-    r = requests.delete(flask_url + "/stop_call", data=check_call)
+def stop(name, operation):
+    msg = {'name': name, 'operation': operation}
+    r = requests.delete(flask_url + "/stop", data=msg)
     return r.json()  # r.status_code
 
 
@@ -118,4 +111,4 @@ if __name__ == '__main__':
     accept(my_name, user)
 
     time.sleep(7)
-    stop_chat(my_name)
+    stop(my_name, 'call')

@@ -30,32 +30,29 @@ class App(Tk):
         self.sp_background = PhotoImage(file=App.start_page_background)
 
         self.threading_state()
-
-        for F in (StartPage, Login, Register, Main, Calling, Chat, Called):
-            frame = F(self.container, self)
-            self.frames[F] = frame
-
-            frame.grid(row=0, column=0, sticky="nsew")
-            center_window(self)
-
+        self.create_frames()
+        center_window(self)
         self.show_frame(StartPage)
+        # The following three commands are needed so the window pops
+        # up on top on Windows...
+        self.iconify()
+        self.update()
+        self.deiconify()
 
-    def finish_create(self):
-        for F in (Main, Calling, Chat, Called):
+    def create_frames(self):
+        for F in (StartPage, Login, Register, Main, Calling, Called, Chat):
             frame = F(self.container, self)
             self.frames[F] = frame
-
             frame.grid(row=0, column=0, sticky="nsew")
-            center_window(self)
 
     def show_frame(self, context):
         frame = self.frames[context]
         frame.tkraise()
 
-    def threading_state(self, wait=10000):
-        print('threads num:', active_count() - 1)
+    def threading_state(self, wait=8000):
         threads = [thread.getName() for thread in enumerate() if thread.getName() != 'MainThread']
         if threads:
+            print('threads num:', active_count() - 1)
             print(threads)
         self.after(wait, self.threading_state)
 
@@ -68,7 +65,7 @@ class Chat(Frame):
         Button(self, text='End Chat', command=self.stop_chat).pack()
 
     def stop_chat(self):
-        ask.stop_chat(self.controller.username)
+        ask.stop(self.controller.username, 'call')
 
     def start_chat(self):
         self.v1 = Voice()
@@ -160,7 +157,7 @@ class Calling(Frame):
 
     # cancels call
     def stop_calling(self):
-        ask.stop_calling(self.controller.username)
+        ask.stop(self.controller.username, 'calling')
         self.cancel = True
 
     # checks if target agreed to chat
@@ -209,7 +206,7 @@ class Calling(Frame):
 
         else:  # error, call already exists, handling
             print('error')
-            ask.stop_calling(self.controller.username)
+            ask.stop(self.controller.username, 'calling')
             self.calling()
 
 
@@ -250,19 +247,21 @@ class Called(Frame):
         PlaySound(None, SND_PURGE)
         successful = ask.accept(self.controller.user_called, self.controller.username)
         if successful == 'True':
-            time.sleep(1)
+            time.sleep(0.5)
             self.controller.show_frame(Chat)
             self.controller.frames[Chat].start_chat()
         else:
             pop_up_message('call was canceled')
             print('call was canceled')
+            print('err')
+            ask.stop(self.controller.username, 'calling')
             self.controller.show_frame(Main)
             self.start_checking()
 
     def no(self):
         ### is this how i wanna handle that? the caller dont check if we canceled
         PlaySound(None, SND_PURGE)
-        ask.stop_chat(self.controller.username)
+        ask.stop(self.controller.username, 'calling')
         self.controller.show_frame(Main)
         self.start_checking()
 
@@ -304,7 +303,7 @@ class Login(Frame):
         if is_connected:
             self.controller.username = name
             pop_up_message(f"you're in, {name}")
-            self.controller.finish_create()
+            self.controller.create_frames()
             self.controller.show_frame(Main)
             self.controller.frames[Called].start_checking()
         else:
