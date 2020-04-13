@@ -13,6 +13,7 @@ class App(Tk):
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        self.title('VoiceChat')
         # Setup Menu
         MainMenu(self)
         # Setup Frame
@@ -356,37 +357,37 @@ class Register(Frame):
                 pop_up_message('username already used')
 
 
-class PageOne(Frame):
-    def __init__(self, parent, controller):
-        Frame.__init__(self, parent)
+# class PageOne(Frame):
+#     def __init__(self, parent, controller):
+#         Frame.__init__(self, parent)
+#
+#         label = Label(self, text="Page One")
+#         label.pack(padx=10, pady=10)
+#         start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
+#         start_page.pack()
+#         page_two = Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
+#         page_two.pack()
 
-        label = Label(self, text="Page One")
-        label.pack(padx=10, pady=10)
-        start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
-        start_page.pack()
-        page_two = Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
-        page_two.pack()
 
-
-class PageTwo(Frame):
-    def __init__(self, parent, controller):
-        Frame.__init__(self, parent)
-
-        label = Label(self, text="Page Two")
-        label.pack(padx=10, pady=10)
-        start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
-        start_page.pack()
-        page_one = Button(self, text="Page One", command=lambda: controller.show_frame(PageOne))
-        page_one.pack()
+# class PageTwo(Frame):
+#     def __init__(self, parent, controller):
+#         Frame.__init__(self, parent)
+#
+#         label = Label(self, text="Page Two")
+#         label.pack(padx=10, pady=10)
+#         start_page = Button(self, text="Start Page", command=lambda: controller.show_frame(StartPage))
+#         start_page.pack()
+#         page_one = Button(self, text="Page One", command=lambda: controller.show_frame(PageOne))
+#         page_one.pack()
 
 
 class MainMenu:
     def __init__(self, master):
-        menubar = Menu(master)
-        filemenu = Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Exit", command=master.quit)
-        menubar.add_cascade(label="File", menu=filemenu)
-        master.config(menu=menubar)
+        menu_bar = Menu(master)
+        file_menu = Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="Exit", command=master.quit)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+        master.config(menu=menu_bar)
 
 
 if __name__ == '__main__':
