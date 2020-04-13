@@ -47,8 +47,8 @@ class Voice:
 
     def start(self):
         self.conn(SERVER_IP, SERVER_PORT)
-        recv = Thread(target=self.receive_data, name='receive_data')
-        send = Thread(target=self.send_data, name='send_data')
+        recv = Thread(target=self.receive_data, name='receive_data', daemon=True)
+        send = Thread(target=self.send_data, name='send_data', daemon=True)
         recv.start()
         send.start()
 

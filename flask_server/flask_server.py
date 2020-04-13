@@ -130,27 +130,29 @@ def accept():
         return jsonify(result)
 
 
-@app.route('/stop_call', methods=['DELETE'])
-def stop_call():
+@app.route('/stop', methods=['DELETE'])
+def stop():
     if request.method == 'DELETE':
         name = request.form.get("name")
         op = request.form.get("operation")
-        result = "was already canceled"
+        result = "empty"
 
-        if op == 'call':
+        if op == 'calling':
             row = Call.query.filter_by(src=name).first()
             if not row:
                 row = Call.query.filter_by(dst=name).first()
             if row:
                 db.session.delete(row)
                 db.session.commit()
-                result = 'call stopped'
-        else:  # calling
-            row = Call.query.filter_by(src=name).first()
-            if row:
-                db.session.delete(row)
-                db.session.commit()
                 result = 'calling stopped'
+        else:  # call
+            row = Call.query.filter_by(src=name).first()
+            if not row:
+                row = Call.query.filter_by(dst=name).first()
+                if row:
+                    db.session.delete(row)
+                    db.session.commit()
+                    result = 'call stopped'
         print('sending:', result)
         return jsonify(result)
 

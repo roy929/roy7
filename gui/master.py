@@ -13,7 +13,6 @@ class App(Tk):
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
-        self.title('VoiceChat')
         # Setup Menu
         MainMenu(self)
         # Setup Frame
@@ -24,38 +23,36 @@ class App(Tk):
 
         self.username = ''
         self.target = ''
+        self.user_called = ''
 
         self.frames = {}
 
         self.sp_background = PhotoImage(file=App.start_page_background)
 
         self.threading_state()
-
-        for F in (StartPage, Login, Register, Main, Calling, Chat, Called):
-            frame = F(self.container, self)
-            self.frames[F] = frame
-
-            frame.grid(row=0, column=0, sticky="nsew")
-            center_window(self)
-
+        self.create_frames()
+        center_window(self)
         self.show_frame(StartPage)
+        # The following three commands are needed so the window pops
+        # up on top on Windows...
+        self.iconify()
+        self.update()
+        self.deiconify()
 
-    def finish_create(self):
-        for F in (Main, Calling, Chat, Called):
+    def create_frames(self):
+        for F in (StartPage, Login, Register, Main, Calling, Called, Chat):
             frame = F(self.container, self)
             self.frames[F] = frame
-
             frame.grid(row=0, column=0, sticky="nsew")
-            center_window(self)
 
     def show_frame(self, context):
         frame = self.frames[context]
         frame.tkraise()
 
-    def threading_state(self, wait=10000):
-        print('threads num:', active_count() - 1)
+    def threading_state(self, wait=8000):
         threads = [thread.getName() for thread in enumerate() if thread.getName() != 'MainThread']
         if threads:
+            print('threads num:', active_count() - 1)
             print(threads)
         self.after(wait, self.threading_state)
 
@@ -68,11 +65,11 @@ class Chat(Frame):
         Button(self, text='End Chat', command=self.stop_chat).pack()
 
     def stop_chat(self):
-        ask.stop_chat(self.controller.username)
+        ask.stop(self.controller.username, 'call')
 
     def start_chat(self):
         self.v1 = Voice()
-        Thread(target=self.chat_ended, name='chat_ended').start()
+        Thread(target=self.chat_ended, name='chat_ended', daemon=True).start()
         self.v1.start()
 
     def chat_ended(self):
@@ -156,15 +153,15 @@ class Calling(Frame):
     def call(self):
         print(f'calling {self.controller.target}')
         self.label['text'] = f'Calling {self.controller.target}...'
-        Thread(target=self.call_now, name='call_now').start()
+        Thread(target=self.calling, name='calling', daemon=True).start()
 
     # cancels call
     def stop_calling(self):
-        ask.stop_calling(self.controller.username)
+        ask.stop(self.controller.username, 'calling')
         self.cancel = True
 
     # checks if target agreed to chat
-    def wait_for_answer(self, timeout=1):
+    def answer(self, timeout=1):
         max_time = time.time() + 60 * timeout  # 1 minutes from now
         # check if 'calling' changed to 'call'
         PlaySound(Calling.ring, SND_LOOP + SND_ASYNC)
@@ -187,12 +184,11 @@ class Calling(Frame):
         return result
 
     # calls and handle the call
-    def call_now(self):
-        # self.show_frame(self.callingF)
+    def calling(self):
         is_posted = ask.call(self.controller.username, self.controller.target)
         if is_posted:
             print('call posted')
-            result = self.wait_for_answer(1)
+            result = self.answer(1)
             if result == 'accepted':
                 print('call accepted')
                 self.controller.show_frame(Chat)
@@ -209,8 +205,9 @@ class Calling(Frame):
                     print("call canceled")
 
         else:  # error, call already exists, handling
-            ask.stop_calling(self.controller.username)
-            self.call_now()
+            print('error')
+            ask.stop(self.controller.username, 'calling')
+            self.calling()
 
 
 class Called(Frame):
@@ -229,9 +226,9 @@ class Called(Frame):
         Button(self, text='no', command=self.no).pack()
 
     def start_checking(self):
-        Thread(target=self.wait_for_a_call, name='wait_for_a_call').start()
+        Thread(target=self.called, name='called', daemon=True).start()
 
-    def wait_for_a_call(self):
+    def called(self):
         print(f'hi {self.controller.username}, waiting for a call')
         while True:
             if ask.look_for_call(self.controller.username):
@@ -250,19 +247,21 @@ class Called(Frame):
         PlaySound(None, SND_PURGE)
         successful = ask.accept(self.controller.user_called, self.controller.username)
         if successful == 'True':
-            time.sleep(1)
+            time.sleep(0.5)
             self.controller.show_frame(Chat)
             self.controller.frames[Chat].start_chat()
         else:
             pop_up_message('call was canceled')
             print('call was canceled')
+            print('err')
+            ask.stop(self.controller.username, 'calling')
             self.controller.show_frame(Main)
             self.start_checking()
 
     def no(self):
         ### is this how i wanna handle that? the caller dont check if we canceled
         PlaySound(None, SND_PURGE)
-        ask.stop_chat(self.controller.username)
+        ask.stop(self.controller.username, 'calling')
         self.controller.show_frame(Main)
         self.start_checking()
 
@@ -304,7 +303,7 @@ class Login(Frame):
         if is_connected:
             self.controller.username = name
             pop_up_message(f"you're in, {name}")
-            self.controller.finish_create()
+            self.controller.create_frames()
             self.controller.show_frame(Main)
             self.controller.frames[Called].start_checking()
         else:
@@ -367,8 +366,8 @@ class Register(Frame):
 #         start_page.pack()
 #         page_two = Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
 #         page_two.pack()
-
-
+#
+#
 # class PageTwo(Frame):
 #     def __init__(self, parent, controller):
 #         Frame.__init__(self, parent)
@@ -383,11 +382,11 @@ class Register(Frame):
 
 class MainMenu:
     def __init__(self, master):
-        menu_bar = Menu(master)
-        file_menu = Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Exit", command=master.quit)
-        menu_bar.add_cascade(label="File", menu=file_menu)
-        master.config(menu=menu_bar)
+        menubar = Menu(master)
+        filemenu = Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Exit", command=master.quit)
+        menubar.add_cascade(label="File", menu=filemenu)
+        master.config(menu=menubar)
 
 
 if __name__ == '__main__':
