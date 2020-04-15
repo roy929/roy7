@@ -127,8 +127,7 @@ class Main(Frame):
         target = self.target_name.get()
         self.target_name.delete(0, END)
         if len(target) > 2 and target != self.controller.username:
-            user_ip = ask.get_user_ip(target)
-            if user_ip:  # checks if the user exists
+            if ask.is_user(target):  # checks if the user exists
                 self.controller.target = target
                 self.controller.show_frame(Calling)
                 self.controller.frames[Calling].call()

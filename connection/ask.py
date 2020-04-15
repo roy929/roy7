@@ -40,16 +40,23 @@ def get_user_ip(name):
     return r.json()  # r.status_code
 
 
-def login(name, pas):
-    data = {'name': name, 'password': pas}
+# return true if user exists
+def is_user(name):
+    if get_user_ip(name):
+        return True
+    return False
+
+
+def login(name, password):
+    data = {'name': name, 'password': password}
     r = requests.get(flask_url + '/login', data=data)
     if r.json() == 'True':
         return True
     return False
 
 
-def register(name, pas):
-    data = {'name': name, 'password': pas}
+def register(name, password):
+    data = {'name': name, 'password': password}
     r = requests.post(flask_url + '/register', data=data)
     if r.json() == 'True':
         return True
@@ -57,8 +64,8 @@ def register(name, pas):
 
 
 # post calling
-def call(src_name, dst_name):
-    new_call = {'src': src_name, 'operation': 'calling', 'dst': dst_name}
+def call(src, dst):
+    new_call = {'src': src, 'operation': 'calling', 'dst': dst}
     r = requests.post(flask_url + '/call', data=new_call)
     # print(r.json())  # r.status_code
     if r.json() == 'True':
@@ -67,21 +74,21 @@ def call(src_name, dst_name):
 
 
 # change to calling to call
-def accept(src_name, dst_name):
-    new_call = {'src': src_name, 'operation': 'call', 'dst': dst_name}
+def accept(src, dst):
+    new_call = {'src': src, 'operation': 'call', 'dst': dst}
     r = requests.put(flask_url + '/accept', data=new_call)
     return r.json()
     # print(r.json())  # r.status_code
 
 
-def look_for_call(dst_name):
-    check_call = {'operation': 'calling', 'dst': dst_name}
+def look_for_call(dst):
+    check_call = {'operation': 'calling', 'dst': dst}
     r = requests.get(flask_url + '/check', data=check_call)
-    return r.json()  # src name || ""
+    return r.json()  # returns src or ""
 
 
-def get_src_name(dst_name):
-    name = look_for_call(dst_name)
+def get_src_name(dst):
+    name = look_for_call(dst)
     if name:
         return name
 
