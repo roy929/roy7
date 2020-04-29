@@ -8,7 +8,7 @@ from connection import ask
 from data.voice import Voice
 
 
-# creates the frames and shows them
+# creates the pages and shows them
 class App(Tk):
     start_page_background = r"..\media\test.png"
 
