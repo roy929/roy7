@@ -8,6 +8,7 @@ from connection import ask
 from data.voice import Voice
 
 
+# creates the frames and shows them
 class App(Tk):
     start_page_background = r"..\media\test.png"
 
@@ -58,6 +59,7 @@ class App(Tk):
         self.after(wait, self.threading_state)
 
 
+# chat page
 class Chat(Frame):
     def __init__(self, master, controller):
         super().__init__(master)
@@ -85,6 +87,7 @@ class Chat(Frame):
                 break
 
 
+# receiving or making a call page
 class Main(Frame):
     def __init__(self, master, controller):
         super().__init__(master)
@@ -139,6 +142,7 @@ class Main(Frame):
             pop_up_message("you can't call yourself")
 
 
+# waiting for a call to be answered page
 class Calling(Frame):
     ring = r"..\media\ring.wav"
 
@@ -210,6 +214,7 @@ class Calling(Frame):
             self.calling()
 
 
+# receiving a call page
 class Called(Frame):
     ring = r"..\media\ring2.wav"
 
@@ -266,6 +271,7 @@ class Called(Frame):
         self.start_checking()
 
 
+# front page of the app
 class StartPage(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -279,6 +285,7 @@ class StartPage(Frame):
         Button(self, text='register', command=lambda: controller.show_frame(Register)).pack()
 
 
+# login page
 class Login(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -317,6 +324,7 @@ class Login(Frame):
         self.enter(name, pas)
 
 
+# register page
 class Register(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -379,7 +387,7 @@ class Register(Frame):
 #         page_one = Button(self, text="Page One", command=lambda: controller.show_frame(PageOne))
 #         page_one.pack()
 
-
+# menu bar
 class MainMenu:
     def __init__(self, master):
         menubar = Menu(master)
