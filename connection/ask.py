@@ -12,6 +12,7 @@ flask_port = 5000
 flask_url = f'http://{host_ip}:{flask_port}'
 
 
+# server's ip and port
 def print_info():
     # print(f'host_name = {host_name}')
     print(f'server ip = {host_ip}')
@@ -28,6 +29,7 @@ def not_rejected(src, dst):
     return r.json()
 
 
+# registered users
 def user_lists():
     r = requests.get(flask_url + '/user_list')
     return r.json()  # r.status_code
@@ -47,6 +49,7 @@ def is_user(name):
     return False
 
 
+# login
 def login(name, password):
     data = {'name': name, 'password': password}
     r = requests.get(flask_url + '/login', data=data)
@@ -55,9 +58,11 @@ def login(name, password):
     return False
 
 
+# register
 def register(name, password):
     data = {'name': name, 'password': password}
     r = requests.post(flask_url + '/register', data=data)
+    print(r.json())
     if r.json() == 'True':
         return True
     return False
@@ -81,12 +86,14 @@ def accept(src, dst):
     # print(r.json())  # r.status_code
 
 
+# check if a user is called
 def look_for_call(dst):
     check_call = {'operation': 'calling', 'dst': dst}
     r = requests.get(flask_url + '/check', data=check_call)
     return r.json()  # returns src or ""
 
 
+# returns name of calling user
 def get_src_name(dst):
     name = look_for_call(dst)
     if name:
