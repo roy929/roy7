@@ -209,7 +209,8 @@ def check_connection():
 if __name__ == '__main__':
     # db.create_all(app=app)
     import socket
-
-    n = socket.gethostname()
-    print('hostname:', n)
+    name = socket.gethostname()
+    print(f'hostname : {name}')
+    ip = socket.gethostbyname(name)
+    print(f'server started\nIP : {ip}')
     app.run(debug=True, host='0.0.0.0', port=5000)

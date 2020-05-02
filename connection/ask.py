@@ -1,20 +1,13 @@
 import requests
 import time
-import socket
 
-# host = 'DESKTOP-03A6E0A'
-# host_name = 'DESKTOP-EVCG5AF'  # COMPUTER 2
-# host_name = input("enter host name, flask_server prints it in run\r\n"
-#                   "if flask runs on this PC type 'localhost'")
-host = 'localhost'
-host_ip = socket.gethostbyname(host)
+host_ip = input('please enter host IP')
 flask_port = 5000
 flask_url = f'http://{host_ip}:{flask_port}'
 
 
 # server's ip and port
 def print_info():
-    # print(f'host_name = {host_name}')
     print(f'server ip = {host_ip}')
     print(f'server port = {flask_port}')
 
