@@ -149,9 +149,9 @@ def stop():
             row = Call.query.filter_by(src=name).first()
             if not row:
                 row = Call.query.filter_by(dst=name).first()
-                if row:
-                    db.session.delete(row)
-                    db.session.commit()
+            if row:
+                db.session.delete(row)
+                db.session.commit()
                     result = 'call stopped'
         print('sending:', result)
         return jsonify(result)
