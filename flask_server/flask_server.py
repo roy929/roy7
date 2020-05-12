@@ -152,7 +152,7 @@ def stop():
             if row:
                 db.session.delete(row)
                 db.session.commit()
-                    result = 'call stopped'
+                result = 'call stopped'
         print('sending:', result)
         return jsonify(result)
 
